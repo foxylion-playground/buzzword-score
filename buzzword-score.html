@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Buzzword Score</title>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      var previous_transcript = '';
+      var recognition = new webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'de-DE';
+
+      recognition.onstart = function() {
+        console.log('on-start');
+      };
+      recognition.onerror = function(event) {
+        console.log('on-error', event);
+      };
+      recognition.onend = function() {
+        console.log('on-end');
+        previous_transcript = $('#transcript').text();
+        recognition.start();
+      };
+      recognition.onresult = function(event) {
+        console.log('on-result', event);
+        if (typeof(event.results) == 'undefined') {
+          return;
+        }
+
+        var final_transcript = previous_transcript;
+        for (var i = 0; i < event.results.length; i++) {
+          var result = event.results[i];
+          if(result.isFinal || i == (event.results.length - 1)) {
+            final_transcript += ' ' + result[0].transcript;
+          }
+        }
+
+        var counts = new Array();
+        var words = final_transcript.split(" ");
+        for (var i = 0; i < words.length; i++) {
+          var word = words[i].toLowerCase().trim();
+          if(typeof counts[word] === 'undefined') {
+            counts[word] = 1;
+          } else {
+            counts[word]++;
+          }
+        }
+
+        var buzzwords = ['cloud', 'opportunity', 'verkaufschance', 'pipeline', 'strategie', 'bestandskunde', 'projekt', 'lead', 'kampagne', 'newsletter', 'kundentag', 'bewerber', 'seminar', 'gewinner', 'kreise', 'holacracy', 'deckungsbeitrag', 'zielplanung', 'wasserspender'];
+
+        var score_html = '<table class="table">';
+        for (var i = 0; i < buzzwords.length; i++) {
+          var buzzword = buzzwords[i];
+          var score = (typeof counts[buzzword] === 'undefined') ? 0 : counts[buzzword];
+          score_html += '<tr><td>' + buzzword + '</td><td>' + score + '</td></tr>';
+        }
+        score_html += '</table>';
+
+        $('#scoring').html(score_html);
+        $('#transcript').text(final_transcript);
+      }
+
+      recognition.start();
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Buzzword Score</h1>
+    <div id="scoring">Fang an zu sprechen!</div>
+    <div id="transcript" style="margin-top: 20px; color: #ccc;"></div>
+  </div>
+</body>
+</html>
