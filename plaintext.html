@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>speech-to-text</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      var previous_transcript = '';
+      var recognition = new webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'de-DE';
+
+      recognition.onstart = function() {
+        console.log('on-start');
+      };
+      recognition.onerror = function(event) {
+        console.log('on-error', event);
+      };
+      recognition.onend = function() {
+        console.log('on-end');
+        previous_transcript = $('#transcript').text();
+        recognition.start();
+      };
+      recognition.onresult = function(event) {
+        console.log('on-result', event);
+        if (typeof(event.results) == 'undefined') {
+          return;
+        }
+
+        var final_transcript = previous_transcript;
+        var pending_transscript = "";
+        for (var i = 0; i < event.results.length; i++) {
+          var result = event.results[i];
+          if(result.isFinal) {
+            final_transcript += ' ' + result[0].transcript;
+          } else {
+            pending_transscript += ' ' + result[0].transcript;
+          }
+        }
+
+        $('#transcript').text(final_transcript);
+        $('#transcript_pending').text(pending_transscript);
+      }
+
+      recognition.start();
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>speech-to-text</h1>
+    <div id="scoring">
+        <span id="transcript" style="font-weight: bold">Start speaking...</span>
+        <span id="transcript_pending" style="color: #aaa"></span>
+    </div>
+  </div>
+</body>
+</html>
